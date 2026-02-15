@@ -9,15 +9,15 @@ export function withAuth<P extends object>(
 ) {
   return function AuthenticatedComponent(props: P) {
     const router = useRouter();
-    const isAuthenticated = useAuthStore((state) => state.isAuthenticated());
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
     useEffect(() => {
-      if (!isAuthenticated()) {
+      if (!isAuthenticated) {
         router.push('/login');
       }
     }, [isAuthenticated, router]);
 
-    if (!isAuthenticated()) {
+    if (!isAuthenticated) {
       return null;
     }
 
