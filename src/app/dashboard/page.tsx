@@ -1,23 +1,39 @@
 'use client';
 
-import {NotificationBell} from '@/components/notifications/NotificationBell';
-import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
-import {Button} from '@/components/ui/button';
-import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
-import {Skeleton} from '@/components/ui/skeleton';
-import {useNotifications} from '@/hooks/useNotifications';
-import {notificationsApi} from '@/lib/api';
-import {useAuthStore} from '@/store/useAuthStore';
-import {useMutation} from '@tanstack/react-query';
-import {Loader2, LogOut, Send} from 'lucide-react';
-import {useRouter} from 'next/navigation';
-import {useEffect} from 'react';
-import {toast} from 'sonner';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
+import { useNotifications } from '@/hooks/useNotifications';
+import { notificationsApi } from '@/lib/api';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useNotificationStore } from '@/store/useNotificationStore';
+import { useMutation } from '@tanstack/react-query';
+import { Loader2, LogOut, Send } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import type { ApiError } from '@/types';
+import { useTranslations } from 'next-intl';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const {user, logout, isAuthenticated} = useAuthStore();
-  const {notifications, isLoading} = useNotifications();
+  const { user, logout, isAuthenticated } = useAuthStore();
+  const notifications = useNotificationStore(state => state.notifications);
+  const { isLoading: isQueryLoading } = useNotifications();
+  const t = useTranslations('dashboard');
+  const tc = useTranslations('common');
+
+  // Local state for custom notification dialog
+  const [isOpen, setIsOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const [message, setMessage] = useState('');
 
   // Check authentication and redirect if needed
   useEffect(() => {
@@ -26,34 +42,41 @@ export default function DashboardPage() {
     }
   }, [isAuthenticated, router]);
 
-  const sendTestNotification = useMutation({
+  const sendNotificationMutation = useMutation({
     mutationFn: () => {
       if (!user) throw new Error('User not found');
       return notificationsApi.create({
         userId: user.id,
-        title: 'Test Notification',
-        message: `This is a test notification sent at ${new Date().toLocaleTimeString()}`,
+        title: title || t('newNotification'),
+        message: message || `${t('notificationSent')} ${new Date().toLocaleTimeString()}`,
       });
     },
     onSuccess: () => {
-      toast.success('Test notification sent!', {
-        description: 'Check your notification bell',
+      toast.success(t('notificationSent'), {
+        description: t('checkBell'),
       });
+      setIsOpen(false);
+      setTitle('');
+      setMessage('');
     },
-    onError: (error: any) => {
-      toast.error('Failed to send notification', {
-        description: error.response?.data?.message || 'Please try again',
+    onError: (error: ApiError) => {
+      toast.error(t('sendFailed'), {
+        description: error.response?.data?.message || t('tryAgain'),
       });
     },
   });
 
   const handleLogout = () => {
     logout();
-    toast.info('Logged out successfully');
+    toast.info(t('loggedOut'));
     router.push('/login');
   };
 
-  if (!user) {
+  const handleSendNotification = () => {
+    sendNotificationMutation.mutate();
+  };
+
+  if (!user || isQueryLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-fuchsia-50 to-purple-50 dark:from-fuchsia-950 dark:to-purple-950">
         <header className="border-b bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
@@ -61,6 +84,31 @@ export default function DashboardPage() {
             <Skeleton className="h-10 w-full" />
           </div>
         </header>
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-10 w-48" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-1/2" />
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-24 w-full" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
       </div>
     );
   }
@@ -84,8 +132,9 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <LanguageSwitcher />
               <NotificationBell />
-              <Button variant="ghost" size="icon" onClick={handleLogout}>
+              <Button variant="ghost" size="icon" onClick={handleLogout} aria-label={tc('logout')}>
                 <LogOut className="h-5 w-5" />
               </Button>
             </div>
@@ -99,49 +148,85 @@ export default function DashboardPage() {
           {/* Welcome Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Welcome to Real-Time Notifications! 🎉</CardTitle>
+              <CardTitle>{t('welcome')}</CardTitle>
               <CardDescription>
-                Your notification system is connected and ready to receive updates in real-time.
+                {t('description')}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button
-                onClick={() => sendTestNotification.mutate()}
-                disabled={sendTestNotification.isPending}
-                className="bg-fuchsia-600 hover:bg-fuchsia-700"
-              >
-                {sendTestNotification.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  <>
+              <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-fuchsia-600 hover:bg-fuchsia-700">
                     <Send className="mr-2 h-4 w-4" />
-                    Send Test Notification
-                  </>
-                )}
-              </Button>
+                    {t('sendCustomNotification')}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{t('newNotification')}</DialogTitle>
+                    <DialogDescription>
+                      {t('notificationDetails')}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">{t('title')}</Label>
+                      <Input
+                        id="title"
+                        placeholder={t('titlePlaceholder')}
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="message">{t('message')}</Label>
+                      <Textarea
+                        id="message"
+                        placeholder={t('messagePlaceholder')}
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsOpen(false)}>{tc('cancel')}</Button>
+                    <Button
+                      onClick={handleSendNotification}
+                      disabled={sendNotificationMutation.isPending}
+                      className="bg-fuchsia-600 hover:bg-fuchsia-700"
+                    >
+                      {sendNotificationMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {tc('sending')}
+                        </>
+                      ) : (
+                        tc('send')
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </CardContent>
           </Card>
 
           {/* Stats Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Notification Stats</CardTitle>
+              <CardTitle>{t('stats.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 bg-fuchsia-50 dark:bg-fuchsia-950/20 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Total Notifications</p>
+                  <p className="text-sm text-muted-foreground">{t('stats.total')}</p>
                   <div className="text-3xl font-bold text-fuchsia-600">
-                    {isLoading ? <Skeleton className="h-9 w-16" /> : notifications.length}
+                    {isQueryLoading ? <Skeleton className="h-9 w-16" /> : notifications.length}
                   </div>
                 </div>
                 <div className="p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Unread</p>
+                  <p className="text-sm text-muted-foreground">{t('stats.unread')}</p>
                   <div className="text-3xl font-bold text-purple-600">
-                    {isLoading ? (
+                    {isQueryLoading ? (
                       <Skeleton className="h-9 w-16" />
                     ) : (
                       notifications.filter((n) => !n.read).length
@@ -149,9 +234,9 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className="p-4 bg-pink-50 dark:bg-pink-950/20 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Read</p>
+                  <p className="text-sm text-muted-foreground">{t('stats.read')}</p>
                   <div className="text-3xl font-bold text-pink-600">
-                    {isLoading ? (
+                    {isQueryLoading ? (
                       <Skeleton className="h-9 w-16" />
                     ) : (
                       notifications.filter((n) => n.read).length
@@ -165,7 +250,7 @@ export default function DashboardPage() {
           {/* Info Card */}
           <Card>
             <CardHeader>
-              <CardTitle>How It Works</CardTitle>
+              <CardTitle>{t('howItWorks.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-3">
@@ -173,9 +258,9 @@ export default function DashboardPage() {
                   1
                 </div>
                 <div>
-                  <h4 className="font-semibold">Real-Time Connection</h4>
+                  <h4 className="font-semibold">{t('howItWorks.step1.title')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    Your browser is connected to the server via WebSocket for instant updates.
+                    {t('howItWorks.step1.description')}
                   </p>
                 </div>
               </div>
@@ -184,9 +269,9 @@ export default function DashboardPage() {
                   2
                 </div>
                 <div>
-                  <h4 className="font-semibold">Instant Notifications</h4>
+                  <h4 className="font-semibold">{t('howItWorks.step2.title')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    When a notification is created, you&apos;ll see it immediately without refreshing.
+                    {t('howItWorks.step2.description')}
                   </p>
                 </div>
               </div>
@@ -195,9 +280,9 @@ export default function DashboardPage() {
                   3
                 </div>
                 <div>
-                  <h4 className="font-semibold">Toast Alerts</h4>
+                  <h4 className="font-semibold">{t('howItWorks.step3.title')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    New notifications appear as toast messages in the top-right corner.
+                    {t('howItWorks.step3.description')}
                   </p>
                 </div>
               </div>

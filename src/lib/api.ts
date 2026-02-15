@@ -14,27 +14,27 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      const authStorage = localStorage.getItem('auth-storage');
+      if (authStorage) {
+        const { state } = JSON.parse(authStorage);
+        if (state?.token) {
+          config.headers.Authorization = `Bearer ${state.token}`;
+        }
       }
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('user');
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/login') {
+        localStorage.removeItem('auth-storage');
         window.location.href = '/login';
       }
     }
@@ -59,6 +59,11 @@ export const notificationsApi = {
 
   create: async (notification: CreateNotificationDto): Promise<Notification> => {
     const {data} = await apiClient.post<Notification>('/notifications', notification);
+    return data;
+  },
+
+  markAsRead: async (id: string): Promise<Notification> => {
+    const {data} = await apiClient.patch<Notification>(`/notifications/${id}/read`);
     return data;
   },
 };

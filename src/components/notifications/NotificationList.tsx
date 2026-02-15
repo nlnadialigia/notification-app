@@ -1,23 +1,43 @@
 'use client';
 
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { NotificationItem } from './NotificationItem';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { notificationsApi } from '@/lib/api';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import type { ApiError } from '@/types';
+import { useTranslations } from 'next-intl';
 
 export function NotificationList() {
   const notifications = useNotificationStore((state) => state.notifications);
   const markAsRead = useNotificationStore((state) => state.markAsRead);
+  const t = useTranslations('notifications');
+  const tc = useTranslations('common');
 
-  const handleNotificationClick = (id: string) => {
-    markAsRead(id);
+  const markAsReadMutation = useMutation({
+    mutationFn: (id: string) => notificationsApi.markAsRead(id),
+    onSuccess: (data) => {
+      markAsRead(data.id);
+    },
+    onError: (error: ApiError) => {
+      toast.error(t('markAsReadError'), {
+        description: error.response?.data?.message,
+      });
+    },
+  });
+
+  const handleNotificationClick = (id: string, isRead: boolean) => {
+    if (!isRead) {
+      markAsReadMutation.mutate(id);
+    }
   };
 
   if (notifications.length === 0) {
     return (
       <div className="p-8 text-center">
-        <p className="text-sm text-muted-foreground">No notifications yet</p>
+        <p className="text-sm text-muted-foreground">{t('empty')}</p>
       </div>
     );
   }
@@ -25,7 +45,7 @@ export function NotificationList() {
   return (
     <div className="flex flex-col">
       <div className="p-4 border-b">
-        <h3 className="font-semibold">Notifications</h3>
+        <h3 className="font-semibold">{tc('notifications')}</h3>
       </div>
       <ScrollArea className="h-[400px]">
         <div className="p-2 space-y-2">
@@ -33,7 +53,7 @@ export function NotificationList() {
             <NotificationItem
               key={notification.id}
               notification={notification}
-              onClick={() => handleNotificationClick(notification.id)}
+              onClick={() => handleNotificationClick(notification.id, notification.read)}
             />
           ))}
         </div>

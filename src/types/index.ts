@@ -26,3 +26,13 @@ export interface CreateNotificationDto {
   title: string;
   message: string;
 }
+
+export interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+    status?: number;
+  };
+  message?: string;
+}

@@ -1,0 +1,55 @@
+{
+  "common": {
+    "logout": "Logout",
+    "notifications": "Notifications",
+    "cancel": "Cancel",
+    "send": "Send",
+    "sending": "Sending..."
+  },
+  "login": {
+    "title": "Real-Time Notifications",
+    "description": "Sign in with your Google account to get started",
+    "error": "Google login failed"
+  },
+  "dashboard": {
+    "welcome": "Welcome to the Notification System! 🎉",
+    "description": "Your system is connected and ready to receive real-time updates.",
+    "sendCustomNotification": "Send Custom Notification",
+    "newNotification": "New Notification",
+    "notificationDetails": "Fill in the details of the notification you want to send.",
+    "title": "Title",
+    "titlePlaceholder": "Ex: System Update",
+    "message": "Message",
+    "messagePlaceholder": "Type your message here...",
+    "notificationSent": "Notification sent!",
+    "checkBell": "Check the notification bell",
+    "sendFailed": "Failed to send notification",
+    "tryAgain": "Try again",
+    "loggedOut": "Logged out successfully",
+    "stats": {
+      "title": "Notification Statistics",
+      "total": "Total",
+      "unread": "Unread",
+      "read": "Read"
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "step1": {
+        "title": "Real-Time Connection",
+        "description": "Your browser is connected via WebSocket for instant updates."
+      },
+      "step2": {
+        "title": "Instant Notifications",
+        "description": "When you create a notification, you'll see it immediately without reloading the page."
+      },
+      "step3": {
+        "title": "Toast Alerts",
+        "description": "New notifications appear as toast messages in the top right corner."
+      }
+    }
+  },
+  "notifications": {
+    "empty": "No notifications yet",
+    "markAsReadError": "Error marking as read"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "common": {
+    "logout": "Sair",
+    "notifications": "Notificações",
+    "cancel": "Cancelar",
+    "send": "Enviar",
+    "sending": "Enviando..."
+  },
+  "login": {
+    "title": "Notificações em Tempo Real",
+    "description": "Entre com sua conta Google para começar",
+    "error": "Falha no login com Google"
+  },
+  "dashboard": {
+    "welcome": "Bem-vindo ao Sistema de Notificações! 🎉",
+    "description": "Seu sistema está conectado e pronto para receber atualizações em tempo real.",
+    "sendCustomNotification": "Enviar Notificação Personalizada",
+    "newNotification": "Nova Notificação",
+    "notificationDetails": "Preencha os detalhes da notificação que deseja enviar.",
+    "title": "Título",
+    "titlePlaceholder": "Ex: Atualização do Sistema",
+    "message": "Mensagem",
+    "messagePlaceholder": "Digite sua mensagem aqui...",
+    "notificationSent": "Notificação enviada!",
+    "checkBell": "Verifique o sino de notificações",
+    "sendFailed": "Falha ao enviar notificação",
+    "tryAgain": "Tente novamente",
+    "loggedOut": "Desconectado com sucesso",
+    "stats": {
+      "title": "Estatísticas de Notificações",
+      "total": "Total",
+      "unread": "Não Lidas",
+      "read": "Lidas"
+    },
+    "howItWorks": {
+      "title": "Como Funciona",
+      "step1": {
+        "title": "Conexão em Tempo Real",
+        "description": "Seu navegador está conectado via WebSocket para atualizações instantâneas."
+      },
+      "step2": {
+        "title": "Notificações Instantâneas",
+        "description": "Ao criar uma notificação, você a verá imediatamente sem recarregar a página."
+      },
+      "step3": {
+        "title": "Alertas Toast",
+        "description": "Novas notificações aparecem como mensagens toast no canto superior direito."
+      }
+    }
+  },
+  "notifications": {
+    "empty": "Nenhuma notificação ainda",
+    "markAsReadError": "Erro ao marcar como lida"
+  }
+}
